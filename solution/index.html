@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DVD Screensaver</title>
+</head>
+<body style="margin:0;width:100%;">
+
+<script src="https://threejs.org/build/three.min.js"></script>
+
+<script>
+
+const visibleHeightAtZDepth = ( depth, camera ) => {
+  // compensate for cameras not positioned at z=0
+  const cameraOffset = camera.position.z;
+  if ( depth < cameraOffset ) depth -= cameraOffset;
+  else depth += cameraOffset;
+
+  // vertical fov in radians
+  const vFOV = camera.fov * Math.PI / 180; 
+
+  // Math.abs to ensure the result is always positive
+  return 2 * Math.tan( vFOV / 2 ) * Math.abs( depth );
+};
+
+const visibleWidthAtZDepth = ( depth, camera ) => {
+  const height = visibleHeightAtZDepth( depth, camera );
+  return height * camera.aspect;
+};
+
+var scene = new THREE.Scene();
+
+var camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000 );
+camera.position.set( 0, 0, 100 );
+
+var renderer = new THREE.WebGLRenderer();
+
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// geometry at z = -100
+const geometry = new THREE.BoxGeometry(visibleWidthAtZDepth( -100, camera) * 0.09, visibleWidthAtZDepth( -100, camera) * 0.09,visibleWidthAtZDepth( -100, camera) * 0.09);
+const material = new THREE.MeshBasicMaterial({color: 0xB0FE0F,wireframe: true,wireframeLinewidth: 2,})
+const cube = new THREE.Mesh(geometry, material);
+cube.position.set(0, 0, -100);
+
+// full width red rectangle at z = -100
+const redGeom = new THREE.BoxGeometry( visibleWidthAtZDepth( -100, camera), 1, 1 );
+const redMat = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+const redMesh = new THREE.Mesh( redGeom, redMat );
+redMesh.position.set( 0, 0, -100 );
+
+// full screen Night Rider rectangle at z = -500
+const whiteGeom = new THREE.BoxGeometry( 1, 1, 1 );
+const whiteMat = new THREE.MeshBasicMaterial( { color: 0x333333 } );
+const whiteMesh = new THREE.Mesh( whiteGeom, whiteMat );
+whiteMesh.position.set( 0, 0, -200 );
+whiteMesh.scale.set( visibleWidthAtZDepth( -200, camera), visibleHeightAtZDepth( -200, camera), 1 );
+
+
+
+var rotationSpeed = 0.01;
+	
+var wall_x = (visibleWidthAtZDepth( -100, camera)/2) - ((visibleWidthAtZDepth( -100, camera) * 0.09) / 2);
+	
+var wall_y = (visibleHeightAtZDepth( -100, camera)/2) - (visibleHeightAtZDepth( -100, camera) * 0.1);
+
+var right = true;
+var left = false;
+
+
+//scene.add( cube, redMesh, whiteMesh );
+scene.add( cube, whiteMesh );
+
+function animate() {
+
+  requestAnimationFrame(animate);
+
+  cube.rotation.x += rotationSpeed;
+  cube.rotation.y += rotationSpeed;
+  
+  if(right == true && cube.position.x <= wall_x){
+	cube.position.x += 1;
+	if(cube.position.x > wall_x){
+		right = false;
+		left = true;
+		 console.log(right,cube.position.x);
+	}
+  }
+  
+  if(left == true && cube.position.x >= -wall_x){
+	cube.position.x -= 1;
+	if(cube.position.x < -wall_x){
+		right = true;
+		left = false;
+		console.log(left,cube.position.x);
+	}
+  }
+  
+ 
+  
+  renderer.render(scene, camera);
+}
+
+animate();
+</script>
+
+</body>
+</html>
